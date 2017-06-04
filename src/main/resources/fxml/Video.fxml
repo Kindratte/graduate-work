@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.111" fx:controller="javafx.VideoController">
+	<center>
+	   <ImageView fx:id="currentFrame" />
+   </center>
+   <right>
+      <VBox alignment="CENTER_LEFT" spacing="10">
+         <padding>
+            <Insets left="10" right="20" />
+         </padding>
+      </VBox>
+   </right>
+   <bottom>
+      <HBox alignment="CENTER">
+         <padding>
+            <Insets bottom="25" left="25" right="25" top="25" />
+         </padding>
+         <Button fx:id="button" alignment="BOTTOM_LEFT" onAction="#startCamera" prefHeight="31.0" prefWidth="140.0" text="Start camera" textAlignment="CENTER" />
+         <Button alignment="BOTTOM_RIGHT" mnemonicParsing="false" prefHeight="31.0" prefWidth="140.0" text="Start streaming" textAlignment="CENTER" onAction="#startStreaming" />
+      </HBox>
+   </bottom>
+</BorderPane>
