@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import org.apache.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -14,6 +15,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
 
+import static org.apache.log4j.Logger.getLogger;
+
 public class VideoController {
 
     @FXML
@@ -21,9 +24,8 @@ public class VideoController {
     @FXML
     private ImageView currentFrame;
     @FXML
-    private Button butt;
+    private ImageView secondFrame;
 
-    // a timer for acquiring the video stream
     private ScheduledExecutorService timer;
 
     private ServerSocket ssocket;
@@ -32,50 +34,55 @@ public class VideoController {
 
     private DataInputStream dis;
 
-    private Runnable receiver;
+    private Thread receiver;
+
+    private boolean streamActive;
+
+    private Connection con;
 
     private BlockingDeque<BufferedImage> images = new LinkedBlockingDeque<>();
 
-    void startServer() throws IOException {
+    private void startServer() throws IOException {
         ssocket = new ServerSocket(54321);
-        receiver = new Runnable() {
+        streamActive = true;
+        receiver = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    sock = ssocket.accept();
-                    if(sock.isConnected())
-                    receive(sock);
+                    con = new Connection(ssocket.accept());
+//                    dis = new DataInputStream(sock.getInputStream());
+                    receive();
                 } catch (IOException e) {
                     System.err.println("Problem on server " + e);
                 } finally {
-                    try {
-                        ssocket.close();
-                    } catch (IOException e) {
-                        //Ignore!
-                    }
+                    Utils.closeQuietly(sock);
+                    Utils.closeQuietly(dis);
                 }
             }
-        };
-        new Thread(receiver).start();
+        });
+        receiver.setName("Receiver");
+        receiver.start();
     }
 
-    private void receive(Socket sock) {
+    private void receive() {
         try {
-            dis = new DataInputStream(sock.getInputStream());
-            while (sock.isConnected()) {
-                int len = dis.readInt();
-                byte[] buf = new byte[len];
+                while (!receiver.isInterrupted()) {
+                    int len = con.dis.readInt();
+                    byte[] buf = new byte[len];
 
-                dis.readFully(buf);
+                    con.dis.readFully(buf);
 
-                System.out.println("length = " + len);
-                ByteArrayInputStream bais = new ByteArrayInputStream(buf);
-                BufferedImage image = ImageIO.read(bais);
-                images.add(image);
-            }
-
+                    System.out.println("length = " + len);
+                    ByteArrayInputStream bais = new ByteArrayInputStream(buf);
+                    BufferedImage image = ImageIO.read(bais);
+                    images.add(image);
+                }
         } catch (IOException e) {
             System.err.println("Some problem with receiving frames " + e);
+            Thread.currentThread().interrupt();
+        } finally {
+            Utils.closeQuietly(con.dis);
+            Utils.closeQuietly(con.socket);
         }
     }
 
@@ -88,19 +95,14 @@ public class VideoController {
         }
     }
 
-    /**
-     * The action triggered by pushing the button on the GUI
-     */
-
     @FXML
     protected void startCamera() {
-        // set a fixed width for the frame
-        this.currentFrame.setFitWidth(600);
-        // preserve image ratio
-        this.currentFrame.setPreserveRatio(true);
+//        // set a fixed width for the frame
+//        this.currentFrame.setFitWidth(600);
+//        // preserve image ratio
+//        this.currentFrame.setPreserveRatio(true);
 
-        startStreaming();
-        if(sock.isConnected()) {
+        if (streamActive) {
             if (!images.isEmpty()) {
                 Runnable grab = new Runnable() {
                     @Override
@@ -114,53 +116,48 @@ public class VideoController {
                         updateImageView(currentFrame, imageToShow);
                     }
                 };
-
                 this.timer = Executors.newSingleThreadScheduledExecutor();
                 this.timer.scheduleAtFixedRate(grab, 0, 33, TimeUnit.MILLISECONDS);
 
-                // update the button content
                 this.button.setText("Stop Camera");
+                streamActive = false;
+
             } else {
+                streamActive = false;
                 System.err.println("Can't take frames from client");
+                stopAcquisition();
             }
         } else {
-            this.button.setText("Start Camera");
-            this.stopAcquisition();
+            button.setText("Start Camera");
+            stopAcquisition();
         }
     }
 
-    /**
-     * Stop the acquisition from the camera and release all the resources
-     */
     private void stopAcquisition() {
-        if (this.timer != null && !this.timer.isShutdown()) {
-            try {
-                // stop the timer
-                this.timer.shutdown();
-                this.timer.awaitTermination(33, TimeUnit.MILLISECONDS);
-            } catch (Exception e) {
-                // log any exception
-                System.err.println("Exception in stopping the frame capture, trying to release the camera now... " + e);
-            }
+        try {
+            timer.shutdown();
+            timer.awaitTermination(33, TimeUnit.MILLISECONDS);
+            receiver.interrupt();
+        } catch (Exception e) {
+            System.err.println("Exception in stopping the frame capture, trying to release the camera now... " + e);
         }
     }
 
-    /**
-     * Update the {@link ImageView} in the JavaFX main thread
-     *
-     * @param view  the {@link ImageView} to update
-     * @param image the {@link Image} to show
-     */
     private void updateImageView(ImageView view, Image image) {
         Utils.onFXThread(view.imageProperty(), image);
     }
 
-    /**
-     * On application close, stop the acquisition from the camera
-     */
     void setClosed() {
-        this.stopAcquisition();
-
+        stopAcquisition();
     }
 
+    private static class Connection {
+        Socket socket;
+        DataInputStream dis;
+
+        Connection(Socket socket) throws IOException {
+            this.socket = socket;
+            this.dis = new DataInputStream(socket.getInputStream());
+        }
+    }
 }

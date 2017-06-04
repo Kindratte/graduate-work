@@ -39,6 +39,7 @@ public class Server extends Application {
             primaryStage.setOnCloseRequest((new EventHandler<WindowEvent>() {
                 public void handle(WindowEvent we) {
                     controller.setClosed();
+                    Thread.currentThread().interrupt();
                 }
             }));
 

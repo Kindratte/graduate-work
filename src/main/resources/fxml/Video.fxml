@@ -5,18 +5,10 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.111" fx:controller="javafx.VideoController">
-	<center>
-	   <ImageView fx:id="currentFrame" />
-   </center>
-   <right>
-      <VBox alignment="CENTER_LEFT" spacing="10">
-         <padding>
-            <Insets left="10" right="20" />
-         </padding>
-      </VBox>
+<BorderPane xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="javafx.VideoController">
+	<right>
+	   <ImageView fx:id="currentFrame" fitHeight="400.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" />
    </right>
    <bottom>
       <HBox alignment="CENTER">
@@ -24,7 +16,10 @@
             <Insets bottom="25" left="25" right="25" top="25" />
          </padding>
          <Button fx:id="button" alignment="BOTTOM_LEFT" onAction="#startCamera" prefHeight="31.0" prefWidth="140.0" text="Start camera" textAlignment="CENTER" />
-         <Button alignment="BOTTOM_RIGHT" mnemonicParsing="false" prefHeight="31.0" prefWidth="140.0" text="Start streaming" textAlignment="CENTER" onAction="#startStreaming" />
+         <Button alignment="BOTTOM_RIGHT" mnemonicParsing="false" onAction="#startStreaming" prefHeight="31.0" prefWidth="140.0" text="Start streaming" textAlignment="CENTER" />
       </HBox>
    </bottom>
+   <left>
+      <ImageView fx:id="secondFrame" fitHeight="400.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true"/>
+   </left>
 </BorderPane>

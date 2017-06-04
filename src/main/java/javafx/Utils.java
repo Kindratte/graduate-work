@@ -8,6 +8,8 @@ import org.opencv.core.Mat;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.Closeable;
+import java.io.IOException;
 
 
 final class Utils {
@@ -52,5 +54,15 @@ final class Utils {
         System.arraycopy(sourcePixels, 0, targetPixels, 0, sourcePixels.length);
 
         return image;
+    }
+
+    static void closeQuietly(Closeable c) {
+        if (c != null) {
+            try {
+                c.close();
+            } catch (IOException e) {
+                System.out.println("Problem with closing " + c);
+            }
+        }
     }
 }
