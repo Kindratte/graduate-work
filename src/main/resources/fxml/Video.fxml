@@ -8,15 +8,17 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="javafx.VideoController">
 	<right>
-	   <ImageView fx:id="currentFrame" fitHeight="400.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" />
+	   <ImageView fx:id="firstFrame" fitHeight="400.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" />
    </right>
    <bottom>
       <HBox alignment="CENTER">
          <padding>
             <Insets bottom="25" left="25" right="25" top="25" />
          </padding>
-         <Button fx:id="button" alignment="BOTTOM_LEFT" onAction="#startCamera" prefHeight="31.0" prefWidth="140.0" text="Start camera" textAlignment="CENTER" />
-         <Button alignment="BOTTOM_RIGHT" mnemonicParsing="false" onAction="#startStreaming" prefHeight="31.0" prefWidth="140.0" text="Start streaming" textAlignment="CENTER" />
+         <Button fx:id="button" alignment="BOTTOM_LEFT" onAction="#startCamera1" prefHeight="30.0" prefWidth="140.0" text="Start camera1" textAlignment="CENTER" />
+         <Button alignment="BOTTOM_LEFT" onAction="#startCamera2" prefHeight="30.0" prefWidth="140.0" text="Start camera2" textAlignment="CENTER" />
+         <!--<Button alignment="BOTTOM_RIGHT" mnemonicParsing="false" onAction="#startStreaming" prefHeight="30.0" prefWidth="140.0" text="Start streaming" textAlignment="CENTER" />-->
+         <Button alignment="BOTTOM_RIGHT" mnemonicParsing="false" onAction="#startServer" prefHeight="30.0" prefWidth="140.0" text="Start server" textAlignment="CENTER" />
       </HBox>
    </bottom>
    <left>

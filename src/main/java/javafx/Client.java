@@ -5,7 +5,6 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
-import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -22,9 +21,9 @@ import static org.apache.log4j.Logger.getLogger;
  */
 class Client {
 
-    private static final String HOST = "localhost";
+    private static final String HOST = "192.168.0.101";
 
-    private static final int PORT = 54321;
+    private static final int PORT = 45000;
 
     private Socket socket;
 
@@ -126,58 +125,6 @@ class Client {
                 // log the error
                 System.err.println("Impossible to open the camera connection...");
             }
-//        } else {
-//            // the camera is not active at this point
-//            this.cameraActive = false;
-//            // update again the button content
-//            VideoController.button.setText("Start Camera");
-//
-//            // stop the timer
-//            VideoController.stopAcquisition();
-//        }
-        }
-    }
-
-    class SenderThread extends Thread {
-
-        private void sendFrame(Mat mat) {
-            while (socket.isConnected()) {
-                try {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    BufferedImage image = Utils.matToBufferedImage(mat);
-                    if (image != null) {
-                        ImageIO.write(image, "jpg", baos);
-                        byte[] bytes = baos.toByteArray();
-                        sender.writeInt(bytes.length);
-                        sender.write(bytes, 0, bytes.length);
-                        System.out.println("Sent length = " + bytes.length);
-                        sender.flush();
-                    }
-                } catch (IOException e) {
-                    System.out.println("Some problems with sending" + e);
-                }
-            }
-        }
-
-        private Mat grabFrame() {
-
-            Mat frame = new Mat();
-            if (camera.isOpened()) {
-                try {
-                    camera.read(frame);
-                } catch (Exception e) {
-                    // log the error
-                    System.err.println("Exception during the frame elaboration: " + e);
-                }
-            }
-            return frame;
-        }
-
-        @Override
-        public void run() {
-            Mat frame = grabFrame();
-            sendFrame(frame);
-            System.out.println("Frame send");
         }
     }
 
