@@ -8,20 +8,31 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="javafx.VideoController">
 	<right>
-	   <ImageView fx:id="firstFrame" fitHeight="400.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" />
+	   <ImageView fx:id="thirdView" fitHeight="400.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" />
    </right>
+   <left>
+      <ImageView fx:id="fourthView" fitHeight="400.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" />
+   </left>
+   <top>
+      <BorderPane prefHeight="400.0" prefWidth="500.0" BorderPane.alignment="CENTER">
+         <left>
+            <ImageView fx:id="firstView" fitHeight="400.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
+         </left>
+         <right>
+            <ImageView fx:id="secondView" fitHeight="400.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true"  BorderPane.alignment="CENTER" />
+         </right>
+      </BorderPane>
+   </top>
    <bottom>
-      <HBox alignment="CENTER">
+      <HBox alignment="CENTER" stylesheets="@../css/application.css">
          <padding>
             <Insets bottom="25" left="25" right="25" top="25" />
          </padding>
-         <Button fx:id="button" alignment="BOTTOM_LEFT" onAction="#startCamera1" prefHeight="30.0" prefWidth="140.0" text="Start camera1" textAlignment="CENTER" />
-         <Button alignment="BOTTOM_LEFT" onAction="#startCamera2" prefHeight="30.0" prefWidth="140.0" text="Start camera2" textAlignment="CENTER" />
-         <!--<Button alignment="BOTTOM_RIGHT" mnemonicParsing="false" onAction="#startStreaming" prefHeight="30.0" prefWidth="140.0" text="Start streaming" textAlignment="CENTER" />-->
-         <Button alignment="BOTTOM_RIGHT" mnemonicParsing="false" onAction="#startServer" prefHeight="30.0" prefWidth="140.0" text="Start server" textAlignment="CENTER" />
+         <Button fx:id="button1" alignment="BOTTOM_LEFT" onAction="#startCamera1" prefHeight="30.0" prefWidth="120.0" text="Start camera 1" textAlignment="CENTER" visible="false" />
+         <Button fx:id="button2" alignment="BOTTOM_LEFT" onAction="#startCamera2" prefHeight="30.0" prefWidth="120.0" text="Start camera 2" textAlignment="CENTER" visible="false" />
+         <Button fx:id="button3" mnemonicParsing="false" onAction="#startCamera3" prefHeight="30.0" prefWidth="120.0" text="Start camera 3" visible="false" />
+         <Button fx:id="button4" mnemonicParsing="false" onAction="#startCamera4" prefHeight="30.0" prefWidth="120.0" text="Start camera 4" visible="false" />
+         <Button alignment="BOTTOM_RIGHT" mnemonicParsing="false" onAction="#startServer" prefHeight="30.0" prefWidth="140.0" stylesheets="@../css/application.css" text="Start server" textAlignment="CENTER" />
       </HBox>
    </bottom>
-   <left>
-      <ImageView fx:id="secondFrame" fitHeight="400.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true"/>
-   </left>
 </BorderPane>

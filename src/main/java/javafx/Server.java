@@ -25,8 +25,8 @@ public class Server extends Application {
             // store the root element so that the controllers can use it
             BorderPane rootElement = (BorderPane) loader.load();
             // create and style a scene
-            Scene scene = new Scene(rootElement, 1000, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/application.css").toExternalForm());
+            Scene scene = new Scene(rootElement, 1000, 900);
+            scene.getStylesheets().add("/css/application.css");
             // create the stage with the given title and the previously created
             // scene
             primaryStage.setTitle("Server processing");

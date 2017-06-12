@@ -12,51 +12,39 @@ import java.io.Closeable;
 import java.io.IOException;
 
 
-final class Utils {
+public final class Utils {
 
-    static Image bufferedImage2Image(BufferedImage bi) {
-        try{
-            return SwingFXUtils.toFXImage(bi,null);
+    public static Image bufferedImage2Image(BufferedImage bi) {
+        try {
+            return SwingFXUtils.toFXImage(bi, null);
         } catch (Exception e) {
             System.err.println("Cannot convert the BufferedImage" + e);
             return null;
         }
     }
 
-    static Image mat2Image(Mat frame) {
-        try {
-            return SwingFXUtils.toFXImage(matToBufferedImage(frame), null);
-        } catch (Exception e) {
-            System.err.println("Cannot convert the Mat object: " + e);
-            return null;
-        }
-    }
-
-    static <T> void onFXThread(final ObjectProperty<T> property, final T value) {
+    public static <T> void onFXThread(final ObjectProperty<T> property, final T value) {
         Platform.runLater(() -> {
             property.set(value);
         });
     }
 
-    static BufferedImage matToBufferedImage(Mat original) {
-        // init
+    public static BufferedImage matToBufferedImage(Mat original) {
+
         BufferedImage image;
         int width = original.width(), height = original.height(), channels = original.channels();
         byte[] sourcePixels = new byte[width * height * channels];
         original.get(0, 0, sourcePixels);
 
-        if (original.channels() > 1) {
-            image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-        } else {
-            image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-        }
+        image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+
         final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
         System.arraycopy(sourcePixels, 0, targetPixels, 0, sourcePixels.length);
 
         return image;
     }
 
-    static void closeQuietly(Closeable c) {
+    public static void closeQuietly(Closeable c) {
         if (c != null) {
             try {
                 c.close();
