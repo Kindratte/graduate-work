@@ -11,10 +11,9 @@ import java.awt.image.DataBufferByte;
 import java.io.Closeable;
 import java.io.IOException;
 
+final class Utils {
 
-public final class Utils {
-
-    public static Image bufferedImage2Image(BufferedImage bi) {
+    static Image bufferedImage2Image(BufferedImage bi) {
         try {
             return SwingFXUtils.toFXImage(bi, null);
         } catch (Exception e) {
@@ -23,13 +22,13 @@ public final class Utils {
         }
     }
 
-    public static <T> void onFXThread(final ObjectProperty<T> property, final T value) {
+    static <T> void onFXThread(final ObjectProperty<T> property, final T value) {
         Platform.runLater(() -> {
             property.set(value);
         });
     }
 
-    public static BufferedImage matToBufferedImage(Mat original) {
+    static BufferedImage matToBufferedImage(Mat original) {
 
         BufferedImage image;
         int width = original.width(), height = original.height(), channels = original.channels();
@@ -44,7 +43,7 @@ public final class Utils {
         return image;
     }
 
-    public static void closeQuietly(Closeable c) {
+    static void closeQuietly(Closeable c) {
         if (c != null) {
             try {
                 c.close();

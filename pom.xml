@@ -82,6 +82,7 @@
                     <mainClass>javafx.Server</mainClass>
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
 

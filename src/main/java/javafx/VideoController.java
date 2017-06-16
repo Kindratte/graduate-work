@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import org.apache.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -39,12 +40,18 @@ public class VideoController {
 
     private List<Connection> connectionList = new ArrayList<>(4);
 
+    private static final Logger log = Logger.getLogger(Server.class);
+
     @FXML
     private void startServer() throws IOException {
-        ssocket = new ServerSocket(45000);
-        Thread registrar = new Thread(new Registrar());
-        registrar.setDaemon(true);
-        registrar.start();
+        if (ssocket == null) {
+            ssocket = new ServerSocket(34343);
+            Thread registrar = new Thread(new Registrar());
+            registrar.setDaemon(true);
+            registrar.start();
+        } else {
+            log.debug("Server socket already exist!");
+        }
     }
 
     @FXML
@@ -69,24 +76,30 @@ public class VideoController {
 
     private void receiveAndStream(Connection con, ImageView frame, Button butt) {
         if (con.streamActive) {
-            con.startStreaming();
+
+            log.debug("Image queue size is " + con.images.size());
+
+            con.streamActive = false;
+
+            if (!con.isServerStarted) {
+                con.startStreaming();
+                con.isServerStarted = true;
+            }
+
             Runnable grab = () -> {
-                {
-                    Image imageToShow = null;
-                    try {
-                        imageToShow = Utils.bufferedImage2Image(con.images.takeFirst());
-                    } catch (Exception e) {
-                        System.err.println("Can't cast buffered image to image \n");
-                        e.printStackTrace();
-                    }
-                    updateImageView(frame, imageToShow);
+                Image imageToShow = null;
+                try {
+                    imageToShow = Utils.bufferedImage2Image(con.images.takeFirst());
+                } catch (Exception e) {
+                    log.error("Can't cast buffered image to image \n");
+                    e.printStackTrace();
                 }
+                updateImageView(frame, imageToShow);
             };
             con.timer = Executors.newSingleThreadScheduledExecutor();
             con.timer.scheduleAtFixedRate(grab, 0, 33, TimeUnit.MILLISECONDS);
 
             butt.setText("Stop Camera");
-            con.streamActive = false;
         } else {
             butt.setText("Start Camera");
             stopAcquisition(con);
@@ -98,10 +111,10 @@ public class VideoController {
         try {
             con.timer.shutdown();
             con.timer.awaitTermination(33, TimeUnit.MILLISECONDS);
-            con.receiver.interrupt();
         } catch (Exception e) {
-            System.err.println("Exception in stopping the frame capture, trying to release the camera now... " + e);
+            log.error("Exception in stopping the frame capture, trying to release the camera now... ", e);
             stopAcquisition(con);
+            con.receiver.interrupt();
         }
     }
 
@@ -110,8 +123,10 @@ public class VideoController {
     }
 
     void setClosed() {
-        for(Connection con : connectionList)
-        stopAcquisition(con);
+        for (Connection con : connectionList) {
+            stopAcquisition(con);
+            con.receiver.interrupt();
+        }
     }
 
     private static class Connection {
@@ -122,6 +137,7 @@ public class VideoController {
         private boolean streamActive;
         private Thread receiver;
         private ScheduledExecutorService timer;
+        private boolean isServerStarted;
 
         Connection(Socket socket) throws IOException {
             this.socket = socket;
@@ -136,14 +152,14 @@ public class VideoController {
 
                     dis.readFully(buf);
 
-                    System.out.println("length = " + len);
-                    ByteArrayInputStream bais = new ByteArrayInputStream(buf);
-                    BufferedImage image = ImageIO.read(bais);
-                    images.add(image);
+                    if (images.size() < 5) {
+                        ByteArrayInputStream bais = new ByteArrayInputStream(buf);
+                        BufferedImage image = ImageIO.read(bais);
+                        images.add(image);
+                    }
                 }
             } catch (IOException e) {
-                System.err.println("Some problem with receiving frames " + e);
-                Thread.currentThread().interrupt();
+                log.error("Some problem with receiving frames ", e);
             } finally {
                 Utils.closeQuietly(dis);
                 Utils.closeQuietly(socket);
@@ -165,7 +181,7 @@ public class VideoController {
                     Connection con = new Connection(ssocket.accept());
                     con.images = new LinkedBlockingDeque<>();
                     connectionList.add(con);
-                    System.out.println("New connection " + con.socket.getPort());
+                    log.debug("New connection " + con.socket.getPort());
                     con.streamActive = true;
                     switch (connectionList.size()) {
                         case 1:
@@ -183,7 +199,7 @@ public class VideoController {
                     }
                 }
             } catch (IOException e) {
-                System.err.println("Problem on server " + e);
+                log.error("Problem on server ", e);
             }
         }
     }

@@ -68,6 +68,23 @@
           <mainClass>javafx.Server</mainClass>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.googlecode.mavennatives</groupId>
+        <artifactId>maven-nativedependencies-plugin</artifactId>
+        <version>0.0.7</version>
+        <executions>
+          <execution>
+            <id>unpacknatives</id>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <nativesTargetDir>target/natives</nativesTargetDir>
+          <separateDirs>false</separateDirs>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <dependencies>

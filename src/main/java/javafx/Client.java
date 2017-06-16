@@ -1,5 +1,6 @@
 package javafx;
 
+import org.apache.log4j.Logger;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
@@ -8,9 +9,7 @@ import org.opencv.videoio.Videoio;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
+import java.net.*;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,7 +30,7 @@ class Client {
 
     private ScheduledExecutorService timer;
 
-    private ByteArrayOutputStream baos;
+    private static final Logger log = Logger.getLogger(Client.class);
 
     public Client(SocketAddress addr) {
         this.addr = addr;
@@ -45,36 +44,32 @@ class Client {
             socket = new Socket();
             socket.connect(addr);
             sender = new DataOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
-            System.err.println("Connection problem " + e);
-            e.printStackTrace();
+        } catch (ConnectException e) {
+                log.error("Connection problem");
+                log.debug("Trying to reconnect... ");
+                openConnection();
+        } catch (IOException e1) {
+            log.error("Fatal error! ", e1);
+            Utils.closeQuietly(socket);
+            Utils.closeQuietly(sender);
+            camera.release();
+            timer.shutdown();
         }
     }
 
-    private void sendFrame(Mat mat) {
-        try {
-            baos = new ByteArrayOutputStream();
-            BufferedImage image = Utils.matToBufferedImage(mat);
-            if (image != null) {
-                ImageIO.write(image, "jpg", baos);
-                byte[] bytes = baos.toByteArray();
-                sender.writeInt(bytes.length);
-                sender.write(bytes, 0, bytes.length);
-                System.out.println("Sent length = " + bytes.length);
-                sender.flush();
-            } else {
-                System.err.println("Can't cast mat to image");
-            }
-        } catch (IOException e) {
-            System.err.println("Some problems with sending " + e);
-            this.timer.shutdown();
-            try {
-                this.timer.awaitTermination(33, TimeUnit.MILLISECONDS);
-                camera.release();
-            } catch (InterruptedException e1) {
-                Thread.currentThread().interrupt();
-                camera.release();
-            }
+    private void sendFrame(Mat mat) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BufferedImage image = Utils.matToBufferedImage(mat);
+        if (image != null) {
+            ImageIO.write(image, "jpg", baos);
+            byte[] bytes = baos.toByteArray();
+            sender.writeInt(bytes.length);
+            sender.write(bytes);
+            log.debug("Sent length = " + bytes.length);
+            sender.flush();
+            log.debug("Frame send");
+        } else {
+            log.debug("Can't cast mat to image");
         }
     }
 
@@ -85,7 +80,7 @@ class Client {
             try {
                 camera.read(frame);
             } catch (Exception e) {
-                System.err.println("Exception during the frame elaboration: " + e);
+                log.error("Exception during the frame elaboration: " + e);
             }
         }
         return frame;
@@ -100,17 +95,28 @@ class Client {
             openConnection();
 
             Runnable grabber = () -> {
-                {
-                    Mat frame = grabFrame();
+                Mat frame = grabFrame();
+                try {
+                    if (socket.isConnected())
                     sendFrame(frame);
-                    System.out.println("Frame send");
+                } catch (SocketException e) {
+                    Utils.closeQuietly(socket);
+                    Utils.closeQuietly(sender);
+                    log.debug("Trying to reconnect... ");
+                    openConnection();
+                } catch (IOException e1) {
+                    log.error("Fatal error! ",e1);
+                    Utils.closeQuietly(socket);
+                    Utils.closeQuietly(sender);
+                    camera.release();
+                    timer.shutdown();
                 }
             };
 
-            this.timer = Executors.newSingleThreadScheduledExecutor();
-            this.timer.scheduleAtFixedRate(grabber, 0, 33, TimeUnit.MILLISECONDS);
+            timer = Executors.newSingleThreadScheduledExecutor();
+            timer.scheduleAtFixedRate(grabber, 0, 33, TimeUnit.MILLISECONDS);
         } else {
-            System.err.println("Impossible to open the camera connection...");
+            log.error("Impossible to open the camera connection...");
         }
     }
 
